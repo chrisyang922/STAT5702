@@ -1,0 +1,246 @@
+---
+title: "EDAV Community Contribution"
+author: Ashely Noh (cn2671) and Jeong Yong Yang (jy3464)
+execute:
+  echo: true
+format:
+  html:
+    fig-width: 6
+    fig-height: 4
+    embed-resources: true
+---
+
+Dataset: Airquality Dataset
+
+Part 1: Exploring Regression Models in R
+
+
+```{r}
+library(moments)
+library(dplyr)
+library(tidyr)
+```
+
+```{r}
+airData <- airquality
+summary(airData)
+```
+Dropping rows corresponding to the NA values at Ozone and Solar.R Columns
+
+```{r}
+airData <- airData |> drop_na(Ozone, Solar.R)
+```
+
+Pair Plot to Visualize the Correlation using GGally package
+https://r-graph-gallery.com/199-correlation-matrix-with-ggally.html
+https://r-charts.com/correlation/ggpairs/
+
+```{r}
+library(GGally)
+ggpairs(airData, columns = 1: 4)
+```
+Basic Scatterplot
+
+```{r}
+library(ggplot2)
+ggplot(airData, aes(x = Temp, y = Ozone)) +
+  geom_point(color = "blue") +
+  labs(title = "Temperature vs. Ozone",
+       x = "Temperature",
+       y = "Ozone") +
+  theme_minimal()
+```
+
+Linear Model of the Temp and Ozone variable (highest Correlation value according to the pair plot above) 
+&
+Residual Plot of the linear model
+
+Linear & Modeling: https://www.statology.org/quadratic-regression-r/
+
+predict Function: https://www.digitalocean.com/community/tutorials/predict-function-in-r
+
+geom_segment: https://ggplot2.tidyverse.org/reference/geom_segment.html
+
+Residual plot: https://www.statology.org/ggplot2-residual-plot/
+
+
+```{r}
+model_linear <- lm(Ozone ~ Temp, airData)
+linear_coeff <- model_linear$coefficients
+
+airData$Ozone_linear <- predict(model_linear, newdata = airData)
+
+linear_equation <- paste0("y = ", round(linear_coeff[2], 2), "x", " + ", round(linear_coeff[1], 2))
+
+ggplot(airData, aes(x = Temp, y = Ozone)) +
+  geom_point(color = "blue") +
+  geom_line(data = airData, aes(x = Temp, y = Ozone_linear), color = "black") +
+  geom_segment(aes(x = Temp, xend = Temp, y = Ozone, yend = Ozone_linear), color = "red") +
+  labs(title = "Temperature vs. Ozone with Linear Regression Line",
+    x = "Temperature",
+    y = "Ozone") +
+    annotate("text", x = Inf, y = 0, label = linear_equation, hjust = 1.1, vjust = 1.1, parse = FALSE)
+
+airData$fit_value_linear <- model_linear$fitted.values
+airData$residual_linear <- model_linear$residuals
+
+ggplot(airData, aes(x = fit_value_linear, y = residual_linear)) +
+  geom_point(color = "blue") +
+  geom_hline(yintercept = 0, color = "black") +
+  labs(title = "Residuals vs Fitted Values for Linear Regression Line",
+       x = "Fitted Values",
+       y = "Residuals") 
+```
+
+Quadratic Model of the Temp and Ozone variable (highest Correlation value according to the pair plot above) 
+&
+Residual Plot of the quadratic model
+
+```{r}
+airData$Temp_squared <- airData$Temp^2
+model_quadratic <- lm(Ozone ~ Temp + Temp_squared, airData)
+quadratic_coeff <- model_quadratic$coefficients
+
+airData$Ozone_quadratic <- predict(model_quadratic, newdata = airData)
+
+quadratic_equation <- paste0("y = ", round(quadratic_coeff[3], 2), "x^2", " + ", round(quadratic_coeff[2], 2), "x", " + ", round(quadratic_coeff[1], 2))
+
+ggplot(airData, aes(x = Temp, y = Ozone)) +
+  geom_point(color = "blue") +
+  geom_line(data = airData, aes(x = Temp, y = Ozone_quadratic), color = "black") +
+  geom_segment(aes(x = Temp, xend = Temp, y = Ozone, yend = Ozone_quadratic), color = "red") +
+  labs(title = "Temperature vs. Ozone with Quadratic Regression Line",
+    x = "Temperature",
+    y = "Ozone") +
+  annotate("text", x = Inf, y = 0, label = quadratic_equation, hjust = 1.1, vjust = 1.1, parse = FALSE)
+
+airData$fit_value_quadratic <- model_quadratic$fitted.values
+airData$residual_quadratic <- model_quadratic$residuals
+
+ggplot(airData, aes(x = fit_value_quadratic, y = residual_quadratic)) +
+  geom_point(color = "blue") +
+  geom_hline(yintercept = 0, color = "black") +
+  labs(title = "Residuals vs Fitted Values for Quadratic Regression Line",
+       x = "Fitted Values",
+       y = "Residuals") 
+```
+Exponential Model of the Temp and Ozone variable (highest Correlation value according to the pair plot above) 
+&
+Residual Plot of the exponential model
+
+Exponential Modeling: https://www.statology.org/exponential-regression-in-r/
+
+
+```{r}
+model_exponential <- lm(log(Ozone) ~ Temp, airData)
+exponential_coeff <- model_exponential$coefficients
+
+airData$Ozone_exponential <- exp(predict(model_exponential, newdata = airData))
+
+exponential_equation <- paste0("y = ", round(exponential_coeff[1], 2), "e^(", round(exponential_coeff[2], 2), "x)")
+
+ggplot(airData, aes(x = Temp, y = Ozone)) +
+  geom_point(color = "blue") +
+  geom_line(data = airData, aes(x = Temp, y = Ozone_exponential), color = "black") +
+  geom_segment(aes(x = Temp, xend = Temp, y = Ozone, yend = Ozone_exponential), color = "red") +
+  labs(title = "Temperature vs. Ozone with Exponential Regression Line",
+    x = "Temperature",
+    y = "Ozone") +
+  annotate("text", x = Inf, y = 0, label = exponential_equation, hjust = 1.1, vjust = 1.1, parse = FALSE)
+ 
+  
+
+airData$fit_value_exponential <- model_exponential$fitted.values
+airData$residual_exponential <- model_exponential$residuals
+
+ggplot(airData, aes(x = fit_value_exponential, y = residual_exponential)) +
+  geom_point(color = "blue") +
+  geom_hline(yintercept = 0, color = "black") +
+  labs(title = "Residuals vs Fitted Values for Exponential Regression Line",
+       x = "Fitted Values",
+       y = "Residuals") 
+```
+```{r}
+summary(model_linear)
+summary(model_quadratic)
+summary(model_exponential)
+```
+
+
+
+
+Part 2: Calendar Heatmap
+
+Pair Plot to Visualize Distribution for Temperature and Wind for August and September
+
+```{r, fig.width=8, fig.height=8}
+library(ggplot2)
+library(ggridges)
+library(dplyr)
+library(GGally)
+library(moments)
+library(calendR)
+
+air_data <- airquality |> na.omit()
+
+
+# Calendar
+calendar_data = airquality[, c("Month", "Day", "Wind", "Temp")]
+aug_data <- calendar_data |> filter(Month == 8)
+sep_data <- calendar_data |> filter(Month == 9)
+```
+https://r-charts.com/evolution/monthly-calendar-heatmap/
+https://www.rdocumentation.org/packages/calendR/versions/1.2/topics/calendR
+
+AUGUST DATA
+
+```{r, fig.width = 8, fig.height = 6}
+calendR(
+  year = 1973,
+  month = 8,
+  special.days = aug_data$Temp,
+  gradient = TRUE,
+  low.col = "white",
+  special.col = "#FF4600",
+  legend.pos = "right",
+  legend.title = "Temp(°F)",
+  title.size = 18
+)
+```
+SEPTEMBER DATA
+
+```{r, fig.width = 8, fig.height = 6}
+calendR(
+  year = 1973,
+  month = 9,
+  special.days = sep_data$Temp,
+  gradient = TRUE,
+  low.col = "white",
+  special.col = "#FF4600",
+  legend.pos = "right",
+  legend.title = "Temp(°F)",
+  title.size = 18
+)
+```
+https://r-charts.com/distribution/histogram-boxplot/
+
+
+```{r}
+# Histogram and Boxpot of wind 
+x <- airquality$Wind
+
+hist(x, prob = TRUE,
+     col = "white",
+     main = "Histogram and Boxplot of Wind",
+     xlab = "Wind (mph)")
+
+# Overlay the boxplot
+par(new = TRUE)
+boxplot(x, horizontal = TRUE, axes = FALSE,
+        col = rgb(0, 0.8, 1, alpha = 0.5))
+
+box()
+```
+
+
+
